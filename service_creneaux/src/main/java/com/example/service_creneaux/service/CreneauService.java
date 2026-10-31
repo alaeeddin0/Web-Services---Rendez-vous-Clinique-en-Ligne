@@ -6,8 +6,9 @@ import com.example.service_creneaux.model.Creneau;
 import com.example.service_creneaux.model.StatutCreneau;
 import com.example.service_creneaux.repository.CreneauRepository;
 import org.springframework.stereotype.Service;
-
+import com.example.service_creneaux.exception.RessourceIntrouvableException;
 import java.util.List;
+import com.example.service_creneaux.dto.DisponibiliteResponse;
 
 @Service
 public class CreneauService {
@@ -36,6 +37,39 @@ public class CreneauService {
                 .stream()
                 .map(CreneauResponse::from)
                 .toList();
+    }
+    
+    public DisponibiliteResponse verifierDisponibilite(Long id) {
+        Creneau creneau = trouverEntiteParId(id);
+
+        return new DisponibiliteResponse(
+                creneau.getStatut() == StatutCreneau.LIBRE);
+    }
+    
+    public CreneauResponse reserver(Long id) {
+        Creneau creneau = trouverEntiteParId(id);
+
+        if (creneau.getStatut() != StatutCreneau.LIBRE) {
+            throw new IllegalStateException(
+                    "Seul un créneau libre peut être réservé");
+        }
+
+        creneau.setStatut(StatutCreneau.RESERVE);
+
+        return CreneauResponse.from(creneauRepository.save(creneau));
+    }
+    
+    public CreneauResponse liberer(Long id) {
+        Creneau creneau = trouverEntiteParId(id);
+
+        if (creneau.getStatut() != StatutCreneau.RESERVE) {
+            throw new IllegalStateException(
+                    "Seul un créneau réservé peut être libéré");
+        }
+
+        creneau.setStatut(StatutCreneau.LIBRE);
+
+        return CreneauResponse.from(creneauRepository.save(creneau));
     }
 
     public CreneauResponse trouverParId(Long id) {
@@ -78,7 +112,7 @@ public class CreneauService {
 
     private Creneau trouverEntiteParId(Long id) {
         return creneauRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException(
+                .orElseThrow(() -> new RessourceIntrouvableException(
                         "Créneau introuvable avec l'id : " + id));
     }
 
