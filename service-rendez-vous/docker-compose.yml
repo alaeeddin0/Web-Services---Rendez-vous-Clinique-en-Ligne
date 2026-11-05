@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  # Backend Laravel (Ilyas)
+  backend-rdv:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: service_rdv_backend
+    ports:
+      - "8002:8000"
+    environment:
+      DB_CONNECTION: pgsql
+      DB_HOST: host.docker.internal # Se connecte à la BDD commune de votre machine
+      DB_PORT: 5432
+      DB_DATABASE: clinique_db
+      DB_USERNAME: postgres
+      DB_PASSWORD: secretpassword
+
+  # Frontend React (Ilyas)
+  frontend-rdv:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: service_rdv_frontend
+    ports:
+      - "3002:3000"
+    depends_on:
+      - backend-rdv
