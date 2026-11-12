@@ -1,0 +1,67 @@
+{
+  "info": {
+    "name": "Service Notifications - Clinique",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Créer notification",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"rendezVousId\": 101, \"patientId\": 10, \"type\": \"CONFIRMATION\", \"message\": \"Votre rendez-vous est confirmé\"}"
+        },
+        "url": "http://localhost:8083/api/notifications"
+      }
+    },
+    {
+      "name": "Toutes les notifications",
+      "request": {
+        "method": "GET",
+        "url": "http://localhost:8083/api/notifications"
+      }
+    },
+    {
+      "name": "Notifications patient 10",
+      "request": {
+        "method": "GET",
+        "url": "http://localhost:8083/api/notifications/patient/10"
+      }
+    },
+    {
+      "name": "Chercher notification 1",
+      "request": {
+        "method": "GET",
+        "url": "http://localhost:8083/api/notifications/1"
+      }
+    },
+    {
+      "name": "Notifications rendez-vous 101",
+      "request": {
+        "method": "GET",
+        "url": "http://localhost:8083/api/notifications/rendez-vous/101"
+      }
+    },
+    {
+      "name": "Nombre notifications",
+      "request": {
+        "method": "GET",
+        "url": "http://localhost:8083/api/notifications/count"
+      }
+    },
+    {
+      "name": "Supprimer notification 1",
+      "request": {
+        "method": "DELETE",
+        "url": "http://localhost:8083/api/notifications/1"
+      }
+    }
+  ]
+}
