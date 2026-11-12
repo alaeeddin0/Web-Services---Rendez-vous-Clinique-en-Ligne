@@ -7,7 +7,7 @@ spring:
     name: creneaux-service
 
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/clinique}
+    url: ${DB_URL:jdbc:postgresql://localhost:5433/clinique}
     username: ${DB_USER:clinique}
     password: ${DB_PASSWORD:clinique}
 

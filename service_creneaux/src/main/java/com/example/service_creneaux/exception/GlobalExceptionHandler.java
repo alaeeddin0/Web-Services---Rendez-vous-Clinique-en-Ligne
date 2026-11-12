@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import com.example.service_creneaux.exception.ServiceIndisponibleException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -50,5 +51,11 @@ public class GlobalExceptionHandler {
                 message);
 
         return ResponseEntity.status(status).body(response);
+    }
+    
+    @ExceptionHandler(ServiceIndisponibleException.class)
+    public ResponseEntity<ErreurResponse> gererServiceIndisponible(
+            ServiceIndisponibleException exception) {
+        return erreur(HttpStatus.SERVICE_UNAVAILABLE, exception.getMessage());
     }
 }

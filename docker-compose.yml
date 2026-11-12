@@ -1,0 +1,102 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: clinique
+      POSTGRES_USER: clinique
+      POSTGRES_PASSWORD: clinique
+    ports:
+      - "5433:5432"
+    volumes:
+      - clinique-data:/var/lib/postgresql/data
+      - ./service_medecins/src/main/resources/schema-postgres.sql:/docker-entrypoint-initdb.d/10-medecins.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U clinique -d clinique"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+
+  medecins-service:
+    build: ./service_medecins
+    ports:
+      - "8081:8081"
+    environment:
+      PORT: 8081
+      SPRING_PROFILES_ACTIVE: postgres
+      DB_URL: jdbc:postgresql://db:5432/clinique
+      DB_USERNAME: clinique
+      DB_PASSWORD: clinique
+    depends_on:
+      db:
+        condition: service_healthy
+
+  creneaux-service:
+    build: ./service_creneaux
+    ports:
+      - "8082:8082"
+    environment:
+      SERVER_PORT: 8082
+      DB_URL: jdbc:postgresql://db:5432/clinique
+      DB_USER: clinique
+      DB_PASSWORD: clinique
+      MEDECINS_SERVICE_URL: http://medecins-service:8081
+    depends_on:
+      db:
+        condition: service_healthy
+      medecins-service:
+        condition: service_started
+
+  rendez-vous-service:
+    build: ./service-rendez-vous/backend
+    ports:
+      - "8002:8000"
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      APP_KEY: base64:sA8qjYfxtjceyhgkRuv8Pz8XXVb3sR8bZbuZ7INaZlg=
+      APP_URL: http://localhost:8002
+      DB_CONNECTION: pgsql
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_DATABASE: clinique
+      DB_USERNAME: clinique
+      DB_PASSWORD: clinique
+      SESSION_DRIVER: file
+      CACHE_STORE: file
+      QUEUE_CONNECTION: sync
+      SERVICE_CRENEAUX_URL: http://creneaux-service:8082/creneaux
+      SERVICE_NOTIFICATIONS_URL: http://notifications-service:8083/api/notifications
+      NOTIFICATIONS_ENABLED: "true"
+    depends_on:
+      db:
+        condition: service_healthy
+      creneaux-service:
+        condition: service_started
+      notifications-service:
+        condition: service_started
+
+  notifications-service:
+    build: ./service_notifications
+    ports:
+      - "8083:8083"
+    environment:
+      SERVER_PORT: 8083
+      DB_URL: jdbc:postgresql://db:5432/clinique
+      DB_USER: clinique
+      DB_PASSWORD: clinique
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - medecins-service
+      - creneaux-service
+      - rendez-vous-service
+      - notifications-service
+
+volumes:
+  clinique-data:

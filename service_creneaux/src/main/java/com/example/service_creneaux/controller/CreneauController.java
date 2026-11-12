@@ -8,7 +8,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.example.service_creneaux.dto.DisponibiliteResponse;
-
+import com.example.service_creneaux.model.StatutCreneau;
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -32,8 +33,12 @@ public class CreneauController {
     }
 
     @GetMapping
-    public ResponseEntity<List<CreneauResponse>> lister() {
-        return ResponseEntity.ok(creneauService.lister());
+    public ResponseEntity<List<CreneauResponse>> lister(
+            @RequestParam(required = false) Long medecinId,
+            @RequestParam(required = false) LocalDate date,
+            @RequestParam(required = false) StatutCreneau statut) {
+        return ResponseEntity.ok(
+                creneauService.lister(medecinId, date, statut));
     }
     
     @GetMapping("/{id}/disponibilite")
