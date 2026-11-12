@@ -1,0 +1,462 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Clinique — service médecins",
+    "version": "0.2.0",
+    "description": "Contrat REST du module médecins. Authentification et contrôle de propriété à intégrer avant utilisation avec des données réelles. Les routes photo sont une extension séparée du contrat initial."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8082",
+      "description": "Développement local ; remplacer par l’adresse du service dans chaque environnement."
+    }
+  ],
+  "paths": {
+    "/medecins": {
+      "get": {
+        "operationId": "listMedecins",
+        "summary": "Lister les médecins",
+        "parameters": [
+          {
+            "name": "specialite",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Spécialité exacte, sans distinction de casse. Filtre vide : toute la liste."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Liste de médecins",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Medecin"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createMedecin",
+        "summary": "Inscrire un médecin",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MedecinCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Médecin créé",
+            "headers": {
+              "Location": {
+                "description": "Route relative de consultation du médecin créé.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Medecin"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Données invalides",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Email déjà utilisé",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/medecins/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "description": "Identifiant métier médecin. Utiliser cette valeur comme medecinId."
+        }
+      ],
+      "get": {
+        "operationId": "getMedecin",
+        "summary": "Vérifier et consulter un médecin",
+        "description": "Point d’intégration consommé par Créneaux et Rendez-vous. 200 : médecin existant ; 404 : médecin absent. Une erreur réseau ou 5xx ne signifie pas que le médecin est absent.",
+        "responses": {
+          "200": {
+            "description": "Profil médecin",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Medecin"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Identifiant invalide",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Médecin introuvable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "updateMedecin",
+        "summary": "Modifier un profil médecin",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MedecinUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Profil mis à jour",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Medecin"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Données invalides",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Médecin introuvable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Email déjà utilisé",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/medecins/{id}/photo": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "description": "Identifiant métier médecin. Utiliser cette valeur comme medecinId."
+        }
+      ],
+      "get": {
+        "operationId": "getMedecinPhoto",
+        "summary": "Lire la photo facultative",
+        "responses": {
+          "200": {
+            "description": "Photo réencodée et sans métadonnées",
+            "content": {
+              "image/jpeg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/png": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Identifiant invalide",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Photo absente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "uploadMedecinPhoto",
+        "summary": "Ajouter ou remplacer la photo",
+        "description": "JPEG ou PNG valide. 2 Mo et 4096 × 4096 pixels maximum. Le profil doit déjà exister.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "file"
+                ],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Photo enregistrée, sans contenu"
+          },
+          "400": {
+            "description": "Image absente, invalide ou dimensions trop grandes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Médecin introuvable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Fichier trop volumineux",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Medecin": {
+        "type": "object",
+        "required": [
+          "id",
+          "nom",
+          "prenom",
+          "email",
+          "specialite",
+          "role"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "nom": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "prenom": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 254
+          },
+          "specialite": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "MEDECIN"
+            ]
+          }
+        }
+      },
+      "MedecinCreate": {
+        "type": "object",
+        "required": [
+          "nom",
+          "prenom",
+          "email",
+          "specialite",
+          "motDePasse"
+        ],
+        "properties": {
+          "nom": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "prenom": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 254
+          },
+          "specialite": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "motDePasse": {
+            "type": "string",
+            "format": "password",
+            "writeOnly": true,
+            "minLength": 8,
+            "maxLength": 64,
+            "description": "Maximum 72 octets UTF-8 avant hachage BCrypt."
+          }
+        }
+      },
+      "MedecinUpdate": {
+        "type": "object",
+        "required": [
+          "nom",
+          "prenom",
+          "email",
+          "specialite"
+        ],
+        "properties": {
+          "nom": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "prenom": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 254
+          },
+          "specialite": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          }
+        }
+      },
+      "ApiError": {
+        "type": "object",
+        "required": [
+          "message"
+        ],
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "errors": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}
